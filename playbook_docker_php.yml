@@ -138,7 +138,7 @@
         name: openssl
         state: present
 
-    - name: Instala repositorio de PHP 8.2 (ppa:ondrej/php)
+    - name: Instala repositorio de PHP (ppa:ondrej/php)
       ansible.builtin.apt_repository:
         repo: ppa:ondrej/php
         state: present
