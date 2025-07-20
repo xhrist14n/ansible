@@ -1,0 +1,389 @@
+## sudo ansible-playbook -i localhost, -c local /home/vagrant/playbook.yml
+---
+- name: Setup Docker, kubectl, and Minikube on Ubuntu 24.04
+  hosts: all
+  become: true
+  become_method: sudo
+
+  vars:
+    node_version: "22.x"  # You can set to "18.x" or any supported version
+    php_version: "8.2"  # You can set to "8.x" or any supported version
+    mysql_root_password: "vagrant"
+    pgsql_root_password: "vagrant"
+
+  tasks:
+    - name: Add deadsnakes PPA for Python 3.11
+      apt_repository:
+        repo: ppa:deadsnakes/ppa
+        state: present
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install dependencies
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: true
+
+    - name: Download Docker install script
+      get_url:
+        url: https://get.docker.com
+        dest: /tmp/get-docker.sh
+        mode: '0755'
+
+    - name: Run Docker install script
+      command: sh /tmp/get-docker.sh
+
+    - name: Ensure docker group exists
+      group:
+        name: docker
+        state: present
+
+    - name: Add current user to docker group
+      user:
+        name: "{{ ansible_user_id }}"
+        groups: docker
+        append: yes
+
+    - name: Add vagrant user to docker group
+      user:
+        name: vagrant
+        groups: docker
+        append: yes         
+
+    - name: Start docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes       
+
+    - name: Get stable kubectl version
+      shell: curl -sL https://dl.k8s.io/release/stable.txt
+      register: kubectl_version
+      changed_when: false
+
+    - name: Download kubectl binary
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version.stdout }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Download Minikube
+      get_url:
+        url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+
+    - name: Enable ufw and open port 30000
+      block:
+        - name: Ensure UFW is installed
+          apt:
+            name: ufw
+            state: present
+
+    - name: Allow port 30000
+      ufw:
+        rule: allow
+        port: 30000
+        proto: tcp
+
+    - name: Allow port 8088
+      ufw:
+        rule: allow
+        port: 8088
+        proto: tcp            
+    
+    - name: Allow port 8000
+      ufw:
+        rule: allow
+        port: 8000
+        proto: tcp
+
+    - name: Allow port 3000
+      ufw:
+        rule: allow
+        port: 3000
+        proto: tcp            
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        policy: allow
+
+    - name: Install Git package
+      apt:
+        name: git
+        state: present
+
+    - name: Install Python 3.11 and related packages
+      apt:
+        name:
+          - python3.11
+          - python3.11-venv
+          - python3.11-dev
+        state: present
+
+    - name: Install prerequisites
+      apt:
+        name:
+          - curl
+          - ca-certificates
+          - git
+          - wget
+        state: present
+        update_cache: yes
+
+    - name: Add NodeSource APT key and repo
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_{{ node_version }} | bash -
+      args:
+        executable: /bin/bash
+
+    - name: Install Node.js
+      apt:
+        name: nodejs
+        state: present
+
+    - name: Verify Node.js version
+      command: node -v
+      register: node_version_output
+      changed_when: false
+
+    - name: Print Node.js version
+      debug:
+        var: node_version_output.stdout
+
+
+    - name: Actualiza el cache de apt
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Instalar OpenSSL en sistema operativo
+      apt:
+        name: openssl
+        state: present
+
+    - name: Instala repositorio de PHP 8.2 (ppa:ondrej/php)
+      ansible.builtin.apt_repository:
+        repo: ppa:ondrej/php
+        state: present
+
+    - name: Instala PHP 8.2 y extensiones más usadas
+      ansible.builtin.apt:
+        name:
+          - php8.2
+          - php8.2-cli
+          - php8.2-fpm
+          - php8.2-mysql
+          - php8.2-xml
+          - php8.2-mbstring
+          - php8.2-curl
+          - php8.2-zip
+          - php8.2-gd
+          - php8.2-fileinfo
+          - php8.2-openssl
+          - nginx
+          - php8.2-pdo
+        state: present
+        update_cache: yes
+
+    - name: Instalar herramientas de desarrollo PHP si no están incluidas
+      ansible.builtin.apt:
+        name: php8.2-dev # Para Ubuntu/Debian
+        state: present
+      when: ansible_os_family == "Debian" # Ejecutar solo en Debian/Ubuntu
+
+    - name: Instalar paquete php-tokenizer si existe (redundante en la mayoría de los casos)
+      ansible.builtin.apt:
+        name: php8.2-tokenizer
+        state: present
+      ignore_errors: true # Para que no falle si el paquete no existe
+
+    - name: Asegura que el servicio php8.2-fpm esté iniciado
+      ansible.builtin.service:
+        name: php8.2-fpm
+        state: started
+        enabled: yes
+
+    - name: Asegurar que PHP 8.2 y ctype estén instalados
+      apt:
+        name: 
+          - php8.2
+          - php8.2-common
+          - php8.2-curl
+        state: present
+        update_cache: yes
+
+    - name: Habilitar extensión session si está deshabilitada (opcional)
+      command: phpenmod session
+      ignore_errors: yes
+
+    - name: Verificar que la extensión ctype esté habilitada
+      command: php -m
+      register: php_modules
+
+    - name: Mostrar el estado de la extensión ctype
+      debug:
+        msg: "La extensión ctype está habilitada"
+      when: '"ctype" in php_modules.stdout'
+
+    - name: Habilitar extensión filter (si existe)
+      command: phpenmod filter
+      ignore_errors: yes
+
+    - name: Reiniciar servicio PHP-FPM para aplicar cambios
+      ansible.builtin.service:
+        name: php8.2-fpm
+        state: restarted
+        enabled: yes
+
+    - name: Crear directorio web
+      file:
+        path: "{{ web_root }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Copiar archivo PHP de prueba (info.php)
+      copy:
+        dest: "{{ web_root }}/index.php"
+        content: "<?php phpinfo(); ?>"
+        owner: www-data
+        group: www-data
+        mode: '0644'
+
+    - name: Crear configuración de Nginx para el sitio PHP
+      copy:
+        dest: /etc/nginx/sites-available/mi_sitio
+        content: |
+          server {
+              listen 80;
+              server_name {{ server_name }};
+              root {{ web_root }};
+              index index.php index.html index.htm;
+
+              location / {
+                  try_files $uri $uri/ =404;
+              }
+
+              location ~ \.php$ {
+                  include snippets/fastcgi-php.conf;
+                  fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+              }
+
+              location ~ /\.ht {
+                  deny all;
+              }
+          }
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Activar sitio Nginx
+      file:
+        src: /etc/nginx/sites-available/mi_sitio
+        dest: /etc/nginx/sites-enabled/mi_sitio
+        state: link
+
+    - name: Eliminar sitio por defecto si existe
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Probar configuración Nginx
+      command: nginx -t
+      register: nginx_test
+      changed_when: false
+      failed_when: nginx_test.rc != 0
+
+    - name: Reiniciar Nginx para aplicar configuración
+      service:
+        name: nginx
+        state: restarted
+
+    - name: Asegurar que PHP-FPM esté iniciado y habilitado
+      service:
+        name: php8.2-fpm
+        state: started
+        enabled: yes
+
+
+    - name: Descargar composer.phar versión latest stable
+      get_url:
+        url: https://getcomposer.org/download/latest-stable/composer.phar
+        dest: /usr/local/bin/composer.phar
+        mode: '0755'
+
+    - name: Crear enlace simbólico /usr/local/bin/composer
+      file:
+        src: /usr/local/bin/composer.phar
+        dest: /usr/local/bin/composer
+        state: link
+
+    - name: Instalar paquetes MySQL
+      apt:
+        name:
+          - mysql-server
+          - mysql-client
+          - python3-pymysql   # para módulos Ansible y conexión desde Python
+        state: present
+        update_cache: yes
+
+    - name: Iniciar y habilitar servicio MySQL
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Cambiar contraseña root MySQL y otorgar todos los privilegios
+      mysql_user:
+        name: root
+        host_all: yes
+        password: "{{ mysql_root_password }}"
+        priv: '*.*:ALL,GRANT'
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        check_implicit_admin: yes
+
+    - name: Eliminar usuarios anónimos
+      mysql_user:
+        name: ''
+        host_all: yes
+        state: absent
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Eliminar base de datos de prueba
+      mysql_db:
+        name: test
+        state: absent
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Instalar paquetes PostgreSQL y cliente
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+          - python3-psycopg2  # para conexión y uso con Ansible
+        state: present
+        update_cache: yes
+
+    - name: Iniciar y habilitar servicio PostgreSQL
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Cambiar contraseña de usuario postgres
+      become_user: postgres
+      postgresql_user:
+        name: postgres
+        password: "{{ pgsql_root_password }}"
