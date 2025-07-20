@@ -12,6 +12,8 @@
     pgsql_root_password: "vagrant"
     web_root: /var/www/mysite
     server_name: mysite.com
+    mysql_root_temp_password: 'vagrant'  # initial default password
+    mysql_root_password: 'vagrant'
 
   tasks:
     - name: Add deadsnakes PPA for Python 3.11
@@ -346,6 +348,17 @@
         dest: /usr/local/bin/composer
         state: link
 
+    - name: Create MySQL credentials file
+      copy:
+        dest: /root/.my.cnf
+        content: |
+          [client]
+          user=root
+          password={{ mysql_root_password }}
+        owner: root
+        group: root
+        mode: '0600'
+
     - name: Instalar paquetes MySQL
       apt:
         name:
@@ -361,15 +374,29 @@
         state: started
         enabled: yes
 
-    - name: Configurar contraseña root MySQL
-      mysql_user:
+    - name: Ensure MySQL is running
+      service:
+        name: mysql
+        state: started
+      become: true
+
+    - name: Set MySQL root password
+      community.mysql.mysql_user:
         name: root
-        host_all: yes
+        host: localhost
         password: "{{ mysql_root_password }}"
-        priv: '*.*:ALL,GRANT'
         login_user: root
-        login_unix_socket: /var/run/mysqld/mysqld.sock
+        login_password: "{{ mysql_root_temp_password }}"
         check_implicit_admin: yes
+      become: true
+
+    - name: Test MySQL root connection
+      shell: mysql -u root -p{{ mysql_root_password }} -e "SELECT VERSION();"
+      register: mysql_test
+      ignore_errors: yes
+
+    - debug:
+        var: mysql_test
 
     - name: Eliminar usuarios anónimos
       mysql_user:
