@@ -335,7 +335,6 @@
         state: started
         enabled: yes
 
-
     - name: Descargar composer.phar versión latest stable
       get_url:
         url: https://getcomposer.org/download/latest-stable/composer.phar
@@ -412,8 +411,6 @@
         state: absent
         login_user: root
         login_password: "{{ mysql_root_password }}"
-
-
 
     - name: Instalar paquetes PostgreSQL y cliente
       apt:
