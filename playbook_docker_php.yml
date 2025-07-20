@@ -403,15 +403,15 @@
       register:   postgres_user_check
       ignore_errors: yes
 
-    - name: Crear directorio remoto temporal accesible para postgres
-      file:
-        path: /tmp/.ansible-postgres
-        state: directory
-        owner: postgres
-        group: postgres
-        mode: '0700'        
-      become: yes
-      when: "'postgres' in ansible_facts['passwd']"
+    # - name: Crear directorio remoto temporal accesible para postgres
+    #   file:
+    #     path: /tmp/.ansible-postgres
+    #     state: directory
+    #     owner: postgres
+    #     group: postgres
+    #     mode: '0700'        
+    #   become: yes
+    #   when: "'postgres' in ansible_facts['passwd']"
 
     - name: Ejecutar tarea como usuario postgres con directorio remoto temporal seguro
       become: true
