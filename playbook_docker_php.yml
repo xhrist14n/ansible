@@ -200,11 +200,15 @@
           - php8.2-zip
           - php8.2-gd
           - php8.2-fileinfo
-          - php8.2-openssl
           - nginx
           - php8.2-pdo
+          - php8.2-common
         state: present
         update_cache: yes
+
+    - name: Habilitar la extensión openssl en PHP
+      command: phpenmod openssl
+      ignore_errors: yes        
 
     - name: Instalar herramientas de desarrollo PHP si no están incluidas
       ansible.builtin.apt:
