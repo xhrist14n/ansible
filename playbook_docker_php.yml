@@ -7,7 +7,7 @@
 
   vars:
     node_version:         "22.x"  # You can set to "18.x" or any supported version
-    php_version:          "8.2"  # You can set to "8.x" or any supported version
+    php_version:          "php8.4"  # You can set to "8.x" or any supported version
     ##mysql_root_password: "vagrant"
     pgsql_root_password:  "vagrant"
     web_root:             /var/www/mysite
@@ -143,22 +143,23 @@
         repo: ppa:ondrej/php
         state: present
 
-    - name: Instala PHP 8.2 y extensiones más usadas
+    - name: Instala PHP y extensiones más usadas
       ansible.builtin.apt:
         name:
-          - php8.2
-          - php8.2-cli
-          - php8.2-fpm
-          - php8.2-mysql
-          - php8.2-xml
-          - php8.2-mbstring
-          - php8.2-curl
-          - php8.2-zip
-          - php8.2-gd
-          - php8.2-fileinfo
+          - "{{ php_version }}"
+          - "{{ php_version }}-cli"
+          - "{{ php_version }}-fpm"
+          - "{{ php_version }}-mysql"
+          - "{{ php_version }}-xml"
+          - "{{ php_version }}-mbstring"
+          - "{{ php_version }}-curl"
+          - "{{ php_version }}-zip"
+          - "{{ php_version }}-gd"
+          - "{{ php_version }}-fileinfo"
           - nginx
-          - php8.2-pdo
-          - php8.2-common
+          - "{{ php_version }}-pdo"
+          - "{{ php_version }}-common"
+          - "{{ php_version }}-xdebug"
         state: present
         update_cache: yes
 
@@ -168,28 +169,28 @@
 
     - name: Instalar herramientas de desarrollo PHP si no están incluidas
       ansible.builtin.apt:
-        name: php8.2-dev # Para Ubuntu/Debian
+        name: "{{ php_version }}-dev" # Para Ubuntu/Debian"
         state: present
       when: ansible_os_family == "Debian" # Ejecutar solo en Debian/Ubuntu
 
     - name: Instalar paquete php-tokenizer si existe (redundante en la mayoría de los casos)
       ansible.builtin.apt:
-        name: php8.2-tokenizer
+        name: "{{ php_version }}-tokenizer"
         state: present
       ignore_errors: true # Para que no falle si el paquete no existe
 
-    - name: Asegura que el servicio php8.2-fpm esté iniciado
+    - name: Asegura que el servicio "{{ php_version }}-fpm esté iniciado"
       ansible.builtin.service:
-        name: php8.2-fpm
+        name: "{{ php_version }}-fpm"
         state: started
         enabled: yes
 
-    - name: Asegurar que PHP 8.2 y ctype estén instalados
+    - name: Asegurar que PHP y ctype estén instalados
       apt:
         name: 
-          - php8.2
-          - php8.2-common
-          - php8.2-curl
+          - "{{ php_version }}"
+          - "{{ php_version }}-common"
+          - "{{ php_version }}-curl"
         state: present
         update_cache: yes
 
@@ -212,7 +213,7 @@
 
     - name: Reiniciar servicio PHP-FPM para aplicar cambios
       ansible.builtin.service:
-        name: php8.2-fpm
+        name: "{{ php_version }}-fpm"
         state: restarted
         enabled: yes
 
@@ -248,7 +249,7 @@
 
               location ~ \.php$ {
                   include snippets/fastcgi-php.conf;
-                  fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+                  fastcgi_pass unix:/var/run/php"/{{ php_version }}-fpm.sock;"
               }
 
               location ~ /\.ht {
@@ -283,7 +284,7 @@
 
     - name: Asegurar que PHP-FPM esté iniciado y habilitado
       service:
-        name: php8.2-fpm
+        name: "{{ php_version }}-fpm"
         state: started
         enabled: yes
 
