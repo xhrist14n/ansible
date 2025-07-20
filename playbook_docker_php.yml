@@ -399,8 +399,8 @@
     - name: Comprobar existencia usuario postgres
       ansible.builtin.getent:
         database: passwd
-        key: postgres
-      register: postgres_user_check
+        key:      postgres
+      register:   postgres_user_check
       ignore_errors: yes
 
     - name: Crear directorio remoto temporal accesible para postgres
