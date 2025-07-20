@@ -313,11 +313,18 @@
     #     value: "{{ mysql_root_password }}"
     #     vtype: password
 
+    - name: Install PyMySQL for Ansible MySQL modules
+      apt:
+        name: python3-pymysql
+        state: present
+      become: true         
+
     - name: Install MySQL server (continue on error)
       apt:
         name: mysql-server
         state: present
       ignore_errors: yes
+      update_cache: yes
 
     # - name: Fix broken packages
     #   shell: apt-get install -f -y
@@ -340,13 +347,7 @@
       service:
         name: mysql
         state: started
-        enabled: yes
-
-    - name: Install PyMySQL for Ansible MySQL modules
-      apt:
-        name: python3-pymysql
-        state: present
-      become: true        
+        enabled: yes   
 
     - name: Ensure MySQL is running
       service:
@@ -354,13 +355,14 @@
         state: started
       become: true
 
-    - name: Set MySQL root password and enable login via password
+    - name: Change root user to use mysql_native_password
       mysql_user:
         name: root
         host: localhost
         password: "{{ mysql_root_password }}"
         login_unix_socket: /var/run/mysqld/mysqld.sock
-        priv: '*.*:ALL,GRANT'
+        plugin: mysql_native_password
+        priv: "*.*:ALL,GRANT"
         state: present
 
     # - name: Test MySQL root connection
