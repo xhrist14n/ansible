@@ -342,6 +342,12 @@
         state: started
         enabled: yes
 
+    - name: Install PyMySQL for Ansible MySQL modules
+      apt:
+        name: python3-pymysql
+        state: present
+      become: true        
+
     - name: Ensure MySQL is running
       service:
         name: mysql
