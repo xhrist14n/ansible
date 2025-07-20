@@ -10,6 +10,8 @@
     php_version: "8.2"  # You can set to "8.x" or any supported version
     mysql_root_password: "vagrant"
     pgsql_root_password: "vagrant"
+    web_root: /var/www/mysite
+    server_name: mysite.com
 
   tasks:
     - name: Add deadsnakes PPA for Python 3.11
@@ -278,7 +280,7 @@
 
     - name: Crear configuración de Nginx para el sitio PHP
       copy:
-        dest: /etc/nginx/sites-available/mi_sitio
+        dest: /etc/nginx/sites-available/mysite
         content: |
           server {
               listen 80;
@@ -305,8 +307,8 @@
 
     - name: Activar sitio Nginx
       file:
-        src: /etc/nginx/sites-available/mi_sitio
-        dest: /etc/nginx/sites-enabled/mi_sitio
+        src: /etc/nginx/sites-available/mysite
+        dest: /etc/nginx/sites-enabled/mysite
         state: link
 
     - name: Eliminar sitio por defecto si existe
