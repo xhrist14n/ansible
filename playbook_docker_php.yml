@@ -342,21 +342,21 @@
         state: started
         enabled: yes
 
-    # - name: Ensure MySQL is running
-    #   service:
-    #     name: mysql
-    #     state: started
-    #   become: true
+    - name: Ensure MySQL is running
+      service:
+        name: mysql
+        state: started
+      become: true
 
-    # - name: Set MySQL root password
-    #   community.mysql.mysql_user:
-    #     name: root
-    #     host: localhost
-    #     password: "{{ mysql_root_password }}"
-    #     login_user: root
-    #     login_password: "{{ mysql_root_temp_password }}"
-    #     check_implicit_admin: yes
-    #   become: true
+    - name: Set MySQL root password
+      community.mysql.mysql_user:
+        name: root
+        host: localhost
+        password: "{{ mysql_root_password }}"
+        login_user: root
+        login_password: "{{ mysql_root_temp_password }}"
+        check_implicit_admin: yes
+      become: true
 
     # - name: Test MySQL root connection
     #   shell: mysql -u root -p{{ mysql_root_password }} -e "SELECT VERSION();"
