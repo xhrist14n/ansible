@@ -407,6 +407,10 @@
       become_user: postgres
       environment:
         ANSIBLE_REMOTE_TEMP: "/tmp/.ansible-${USER}"
+      postgresql_user:
+        name: postgres
+        password: "{{ pgsql_root_password }}"
+        state: present
 
     - name: Iniciar y habilitar servicio PostgreSQL
       service:
