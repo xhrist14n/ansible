@@ -385,13 +385,7 @@
         login_user: root
         login_password: "{{ mysql_root_password }}"
 
-    - name: Crear directorio remoto temporal accesible para postgres
-      file:
-        path: /tmp/.ansible-postgres
-        state: directory
-        owner: postgres
-        group: postgres
-        mode: '0700'
+
 
     - name: Instalar paquetes PostgreSQL y cliente
       apt:
@@ -401,6 +395,23 @@
           - python3-psycopg2  # para conexión y uso con Ansible
         state: present
         update_cache: yes
+
+    - name: Comprobar existencia usuario postgres
+      ansible.builtin.getent:
+        database: passwd
+        key: postgres
+      register: postgres_user_check
+      ignore_errors: yes
+
+    - name: Crear directorio remoto temporal accesible para postgres
+      file:
+        path: /tmp/.ansible-postgres
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: '0700'        
+      become: yes
+      when: "'postgres' in ansible_facts['passwd']"
 
     - name: Ejecutar tarea como usuario postgres con directorio remoto temporal seguro
       become: true
