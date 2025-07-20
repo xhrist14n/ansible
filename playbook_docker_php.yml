@@ -325,16 +325,16 @@
     #     warn: false        
     #   ignore_errors: yes
 
-    # - name: Create MySQL credentials file
-    #   copy:
-    #     dest: /root/.my.cnf
-    #     content: |
-    #       [client]
-    #       user=root
-    #       password={{ mysql_root_password }}
-    #     owner: root
-    #     group: root
-    #     mode: '0600'        
+    - name: Create MySQL credentials file
+      copy:
+        dest: /root/.my.cnf
+        content: |
+          [client]
+          user=root
+          password={{ mysql_root_password }}
+        owner: root
+        group: root
+        mode: '0600'        
 
     - name: Iniciar y habilitar servicio MySQL
       service:
@@ -354,15 +354,14 @@
         state: started
       become: true
 
-    - name: Set MySQL root password
-      community.mysql.mysql_user:
+    - name: Set MySQL root password and enable login via password
+      mysql_user:
         name: root
         host: localhost
         password: "{{ mysql_root_password }}"
-        login_user: root
-        login_password: "{{ mysql_root_temp_password }}"
-        check_implicit_admin: yes
-      become: true
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        priv: '*.*:ALL,GRANT'
+        state: present
 
     # - name: Test MySQL root connection
     #   shell: mysql -u root -p{{ mysql_root_password }} -e "SELECT VERSION();"
