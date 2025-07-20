@@ -238,6 +238,11 @@
         path: /etc/nginx/sites-enabled/default
         state: absent
 
+    - name: Eliminar sitio por defecto si existe
+      file:
+        path: /etc/nginx/sites-available/default
+        state: absent
+
     - name: Crear configuración de Nginx para el sitio PHP
       copy:
         dest: /etc/nginx/sites-available/mysite
@@ -254,7 +259,7 @@
 
               location ~ \.php$ {
                   include snippets/fastcgi-php.conf;
-                  fastcgi_pass unix:/var/run/php"/{{ php_version }}-fpm.sock;"
+                  fastcgi_pass unix:/var/run/php/{{ php_version }}-fpm.sock;
               }
 
               location ~ /\.ht {
