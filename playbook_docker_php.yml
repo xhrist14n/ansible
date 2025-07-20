@@ -6,14 +6,14 @@
   become_method: sudo
 
   vars:
-    node_version: "22.x"  # You can set to "18.x" or any supported version
-    php_version: "8.2"  # You can set to "8.x" or any supported version
+    node_version:         "22.x"  # You can set to "18.x" or any supported version
+    php_version:          "8.2"  # You can set to "8.x" or any supported version
     ##mysql_root_password: "vagrant"
-    pgsql_root_password: "vagrant"
-    web_root: /var/www/mysite
-    server_name: mysite.com
+    pgsql_root_password:  "vagrant"
+    web_root:             /var/www/mysite
+    server_name:          mysite.com
     mysql_root_temp_password: 'vagrant'  # initial default password
-    mysql_root_password: 'vagrant'
+    mysql_root_password:  "vagrant"
 
   tasks:
     - name: Add deadsnakes PPA for Python 3.11
@@ -349,19 +349,22 @@
 
     - name: Set MySQL root password before install
       debconf:
-        name: 'mysql-server'
-        question: 'mysql-server/root_password'
+        name: mysql-server
+        question: mysql-server/root_password
         value: "{{ mysql_root_password }}"
-        vtype: 'password'        
+        vtype: password
 
-    - name: Instalar paquetes MySQL
+    - name: Confirm MySQL root password again
+      debconf:
+        name: mysql-server
+        question: mysql-server/root_password_again
+        value: "{{ mysql_root_password }}"
+        vtype: password
+
+    - name: Install MySQL server
       apt:
-        name:
-          - mysql-server
-          - mysql-client
-          - python3-pymysql   # para módulos Ansible y conexión desde Python
+        name: mysql-server
         state: present
-        update_cache: yes
 
     - name: Create MySQL credentials file
       copy:
