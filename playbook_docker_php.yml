@@ -361,10 +361,16 @@
         value: "{{ mysql_root_password }}"
         vtype: password
 
-    - name: Install MySQL server
+    - name: Install MySQL server (continue on error)
       apt:
         name: mysql-server
         state: present
+      ignore_errors: yes
+
+    - name: Fix broken packages
+      shell: apt-get install -f -y
+      args:
+        warn: false        
 
     # - name: Create MySQL credentials file
     #   copy:
