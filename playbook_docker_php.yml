@@ -323,6 +323,7 @@
       shell: apt-get install -f -y
       args:
         warn: false        
+      ignore_errors: yes
 
     # - name: Create MySQL credentials file
     #   copy:
@@ -335,11 +336,11 @@
     #     group: root
     #     mode: '0600'        
 
-    # - name: Iniciar y habilitar servicio MySQL
-    #   service:
-    #     name: mysql
-    #     state: started
-    #     enabled: yes
+    - name: Iniciar y habilitar servicio MySQL
+      service:
+        name: mysql
+        state: started
+        enabled: yes
 
     # - name: Ensure MySQL is running
     #   service:
