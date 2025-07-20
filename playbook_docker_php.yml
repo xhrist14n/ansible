@@ -347,16 +347,12 @@
         dest: /usr/local/bin/composer
         state: link
 
-    - name: Create MySQL credentials file
-      copy:
-        dest: /root/.my.cnf
-        content: |
-          [client]
-          user=root
-          password={{ mysql_root_password }}
-        owner: root
-        group: root
-        mode: '0600'
+    - name: Set MySQL root password before install
+      debconf:
+        name: 'mysql-server'
+        question: 'mysql-server/root_password'
+        value: "{{ mysql_root_password }}"
+        vtype: 'password'        
 
     - name: Instalar paquetes MySQL
       apt:
@@ -366,6 +362,17 @@
           - python3-pymysql   # para módulos Ansible y conexión desde Python
         state: present
         update_cache: yes
+
+    - name: Create MySQL credentials file
+      copy:
+        dest: /root/.my.cnf
+        content: |
+          [client]
+          user=root
+          password={{ mysql_root_password }}
+        owner: root
+        group: root
+        mode: '0600'        
 
     - name: Iniciar y habilitar servicio MySQL
       service:
