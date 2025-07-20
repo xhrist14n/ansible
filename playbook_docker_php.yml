@@ -8,7 +8,7 @@
   vars:
     node_version: "22.x"  # You can set to "18.x" or any supported version
     php_version: "8.2"  # You can set to "8.x" or any supported version
-    mysql_root_password: "vagrant"
+    ##mysql_root_password: "vagrant"
     pgsql_root_password: "vagrant"
     web_root: /var/www/mysite
     server_name: mysite.com
