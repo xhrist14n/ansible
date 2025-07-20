@@ -361,12 +361,13 @@
         state: started
         enabled: yes
 
-    - name: Cambiar contraseña root MySQL y otorgar todos los privilegios
+    - name: Configurar contraseña root MySQL
       mysql_user:
         name: root
         host_all: yes
         password: "{{ mysql_root_password }}"
         priv: '*.*:ALL,GRANT'
+        login_user: root
         login_unix_socket: /var/run/mysqld/mysqld.sock
         check_implicit_admin: yes
 
