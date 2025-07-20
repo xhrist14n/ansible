@@ -366,106 +366,106 @@
         name: mysql-server
         state: present
 
-    - name: Create MySQL credentials file
-      copy:
-        dest: /root/.my.cnf
-        content: |
-          [client]
-          user=root
-          password={{ mysql_root_password }}
-        owner: root
-        group: root
-        mode: '0600'        
+    # - name: Create MySQL credentials file
+    #   copy:
+    #     dest: /root/.my.cnf
+    #     content: |
+    #       [client]
+    #       user=root
+    #       password={{ mysql_root_password }}
+    #     owner: root
+    #     group: root
+    #     mode: '0600'        
 
-    - name: Iniciar y habilitar servicio MySQL
-      service:
-        name: mysql
-        state: started
-        enabled: yes
+    # - name: Iniciar y habilitar servicio MySQL
+    #   service:
+    #     name: mysql
+    #     state: started
+    #     enabled: yes
 
-    - name: Ensure MySQL is running
-      service:
-        name: mysql
-        state: started
-      become: true
+    # - name: Ensure MySQL is running
+    #   service:
+    #     name: mysql
+    #     state: started
+    #   become: true
 
-    - name: Set MySQL root password
-      community.mysql.mysql_user:
-        name: root
-        host: localhost
-        password: "{{ mysql_root_password }}"
-        login_user: root
-        login_password: "{{ mysql_root_temp_password }}"
-        check_implicit_admin: yes
-      become: true
+    # - name: Set MySQL root password
+    #   community.mysql.mysql_user:
+    #     name: root
+    #     host: localhost
+    #     password: "{{ mysql_root_password }}"
+    #     login_user: root
+    #     login_password: "{{ mysql_root_temp_password }}"
+    #     check_implicit_admin: yes
+    #   become: true
 
-    - name: Test MySQL root connection
-      shell: mysql -u root -p{{ mysql_root_password }} -e "SELECT VERSION();"
-      register: mysql_test
-      ignore_errors: yes
+    # - name: Test MySQL root connection
+    #   shell: mysql -u root -p{{ mysql_root_password }} -e "SELECT VERSION();"
+    #   register: mysql_test
+    #   ignore_errors: yes
 
-    - debug:
-        var: mysql_test
+    # - debug:
+    #     var: mysql_test
 
-    - name: Eliminar usuarios anónimos
-      mysql_user:
-        name: ''
-        host_all: yes
-        state: absent
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
+    # - name: Eliminar usuarios anónimos
+    #   mysql_user:
+    #     name: ''
+    #     host_all: yes
+    #     state: absent
+    #     login_user: root
+    #     login_password: "{{ mysql_root_password }}"
 
-    - name: Eliminar base de datos de prueba
-      mysql_db:
-        name: test
-        state: absent
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
+    # - name: Eliminar base de datos de prueba
+    #   mysql_db:
+    #     name: test
+    #     state: absent
+    #     login_user: root
+    #     login_password: "{{ mysql_root_password }}"
 
-    - name: Instalar paquetes PostgreSQL y cliente
-      apt:
-        name:
-          - postgresql
-          - postgresql-contrib
-          - python3-psycopg2  # para conexión y uso con Ansible
-        state: present
-        update_cache: yes
+    # - name: Instalar paquetes PostgreSQL y cliente
+    #   apt:
+    #     name:
+    #       - postgresql
+    #       - postgresql-contrib
+    #       - python3-psycopg2  # para conexión y uso con Ansible
+    #     state: present
+    #     update_cache: yes
 
-    - name: Comprobar existencia usuario postgres
-      ansible.builtin.getent:
-        database: passwd
-        key:      postgres
-      register:   postgres_user_check
-      ignore_errors: yes
+    # - name: Comprobar existencia usuario postgres
+    #   ansible.builtin.getent:
+    #     database: passwd
+    #     key:      postgres
+    #   register:   postgres_user_check
+    #   ignore_errors: yes
 
-    - name: Crear directorio remoto temporal accesible para postgres
-      file:
-        path: /tmp/.ansible-postgres
-        state: directory
-        owner: postgres
-        group: postgres
-        mode: '0700'        
-      become: yes
-      when: "'postgres' in ansible_facts['passwd']"
+    # - name: Crear directorio remoto temporal accesible para postgres
+    #   file:
+    #     path: /tmp/.ansible-postgres
+    #     state: directory
+    #     owner: postgres
+    #     group: postgres
+    #     mode: '0700'        
+    #   become: yes
+    #   when: "'postgres' in ansible_facts['passwd']"
 
-    - name: Ejecutar tarea como usuario postgres con directorio remoto temporal seguro
-      become: true
-      become_user: postgres
-      environment:
-        ANSIBLE_REMOTE_TEMP: "/tmp/.ansible-${USER}"
-      postgresql_user:
-        name: postgres
-        password: "{{ pgsql_root_password }}"
-        state: present
+    # - name: Ejecutar tarea como usuario postgres con directorio remoto temporal seguro
+    #   become: true
+    #   become_user: postgres
+    #   environment:
+    #     ANSIBLE_REMOTE_TEMP: "/tmp/.ansible-${USER}"
+    #   postgresql_user:
+    #     name: postgres
+    #     password: "{{ pgsql_root_password }}"
+    #     state: present
 
-    - name: Iniciar y habilitar servicio PostgreSQL
-      service:
-        name: postgresql
-        state: started
-        enabled: yes
+    # - name: Iniciar y habilitar servicio PostgreSQL
+    #   service:
+    #     name: postgresql
+    #     state: started
+    #     enabled: yes
 
-    - name: Cambiar contraseña de usuario postgres
-      become_user: postgres
-      postgresql_user:
-        name: postgres
-        password: "{{ pgsql_root_password }}"
+    # - name: Cambiar contraseña de usuario postgres
+    #   become_user: postgres
+    #   postgresql_user:
+    #     name: postgres
+    #     password: "{{ pgsql_root_password }}"
