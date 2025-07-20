@@ -233,6 +233,11 @@
         group: www-data
         mode: '0644'
 
+    - name: Eliminar sitio por defecto si existe
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
     - name: Crear configuración de Nginx para el sitio PHP
       copy:
         dest: /etc/nginx/sites-available/mysite
