@@ -1,6 +1,7 @@
 ---
 - name: Instalar Jenkins en servidor
-  hosts: jenkins
+  ##hosts: jenkins
+  hosts: all
   become: yes
 
   vars:
