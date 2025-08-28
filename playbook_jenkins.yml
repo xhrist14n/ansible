@@ -21,24 +21,36 @@
           - curl
         state: present
 
-    - name: Agregar clave GPG de Jenkins
-      apt_key:
-        url: "{{ jenkins_key_url }}"
-        state: present
+    - name: Descargar clave GPG de Jenkins
+      ansible.builtin.get_url:
+        url: "https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key"
+        dest: "/usr/share/keyrings/jenkins-key.gpg"
+        mode: '0644'
 
-    - name: Agregar repositorio de Jenkins
-      apt_repository:
-        repo: "deb {{ jenkins_repo_url }} binary/"
+    - name: Agregar repositorio de Jenkins con signed-by
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/jenkins-key.gpg] https://pkg.jenkins.io/debian-stable binary/"
         state: present
+        filename: jenkins
 
-    - name: Instalar Jenkins
-      apt:
-        name: jenkins
-        state: present
-        update_cache: yes
+    # - name: Agregar clave GPG de Jenkins
+    #   apt_key:
+    #     url: "{{ jenkins_key_url }}"
+    #     state: present
 
-    - name: Asegurar que Jenkins esté habilitado y corriendo
-      systemd:
-        name: jenkins
-        state: started
-        enabled: yes
+    # - name: Agregar repositorio de Jenkins
+    #   apt_repository:
+    #     repo: "deb {{ jenkins_repo_url }} binary/"
+    #     state: present
+
+    # - name: Instalar Jenkins
+    #   apt:
+    #     name: jenkins
+    #     state: present
+    #     update_cache: yes
+
+    # - name: Asegurar que Jenkins esté habilitado y corriendo
+    #   systemd:
+    #     name: jenkins
+    #     state: started
+    #     enabled: yes
