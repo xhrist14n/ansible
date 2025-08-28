@@ -1,14 +1,15 @@
 ---
-- name: Instalar Jenkins en servidor
-  ##hosts: jenkins
+- name: Instalar vagrant en servidor
+  ##hosts: vagrant
   hosts: all
   become: yes
 
   
   vars:
     sdkman_dir: "/usr/local/sdkman"
-    jenkins_repo_url: "https://pkg.jenkins.io/debian-stable"
-    jenkins_key_url: "https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key"
+    ansible_user: "vagrant"
+    vagrant_repo_url: "https://pkg.vagrant.io/debian-stable"
+    vagrant_key_url: "https://pkg.vagrant.io/debian-stable/vagrant.io-2023.key"
 
   tasks:
     - name: Actualizar paquetes
@@ -24,70 +25,60 @@
         state: present
         update_cache: yes
 
-    - name: Crear directorio para SDKMAN
-      file:
-        path: "{{ sdkman_dir }}"
-        state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-
-    - name: Descargar instalador de SDKMAN
-      become_user: "{{ ansible_user }}"
+    - name: Instalar SDKMAN bajo usuario vagrant
+      become: yes
+      become_user: vagrant
       shell: |
         curl -s "https://get.sdkman.io" | bash
       args:
-        creates: "{{ sdkman_dir }}/bin/sdkman-init.sh"
-
-    - name: Cargar SDKMAN en bashrc
-      lineinfile:
-        path: "/home/{{ ansible_user }}/.bashrc"
-        line: 'export SDKMAN_DIR="{{ sdkman_dir }}" && source $SDKMAN_DIR/bin/sdkman-init.sh'
-        insertafter: EOF
+        creates: "/home/vagrant/.sdkman/bin/sdkman-init.sh"
 
     - name: Instalar última versión de Java con SDKMAN
-      become_user: "{{ ansible_user }}"
+      become: yes
+      become_user: vagrant
       shell: |
-        source {{ sdkman_dir }}/bin/sdkman-init.sh && sdk install java
+        source /home/vagrant/.sdkman/bin/sdkman-init.sh && sdk install java
       args:
         executable: /bin/bash
 
     - name: Seleccionar versión por defecto
-      become_user: "{{ ansible_user }}"
+      become: yes
+      become_user: vagrant
       shell: |
-        source {{ sdkman_dir }}/bin/sdkman-init.sh && sdk default java
+        source /home/vagrant/.sdkman/bin/sdkman-init.sh && sdk default java
       args:
         executable: /bin/bash
 
-    - name: Descargar clave GPG de Jenkins
+    - name: Descargar clave GPG de vagrant
       ansible.builtin.get_url:
-        url: "https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key"
-        dest: "/usr/share/keyrings/jenkins-key.gpg"
+        url: "https://pkg.vagrant.io/debian-stable/vagrant.io-2023.key"
+        dest: "/usr/share/keyrings/vagrant-key.gpg"
         mode: '0644'
 
-    - name: Agregar repositorio de Jenkins con signed-by
+    - name: Agregar repositorio de vagrant con signed-by
       ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/usr/share/keyrings/jenkins-key.gpg] https://pkg.jenkins.io/debian-stable binary/"
+        repo: "deb [signed-by=/usr/share/keyrings/vagrant-key.gpg] https://pkg.vagrant.io/debian-stable binary/"
         state: present
-        filename: jenkins        
+        filename: vagrant        
 
-    # - name: Agregar clave GPG de Jenkins
+    # - name: Agregar clave GPG de vagrant
     #   apt_key:
-    #     url: "{{ jenkins_key_url }}"
+    #     url: "{{ vagrant_key_url }}"
     #     state: present
 
-    # - name: Agregar repositorio de Jenkins
+    # - name: Agregar repositorio de vagrant
     #   apt_repository:
-    #     repo: "deb {{ jenkins_repo_url }} binary/"
+    #     repo: "deb {{ vagrant_repo_url }} binary/"
     #     state: present
 
-    # - name: Instalar Jenkins
+    # - name: Instalar vagrant
     #   apt:
-    #     name: jenkins
+    #     name: vagrant
     #     state: present
     #     update_cache: yes
 
-    # - name: Asegurar que Jenkins esté habilitado y corriendo
+    # - name: Asegurar que vagrant esté habilitado y corriendo
     #   systemd:
-    #     name: jenkins
+    #     name: vagrant
     #     state: started
     #     enabled: yes
