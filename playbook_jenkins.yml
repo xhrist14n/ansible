@@ -53,29 +53,30 @@
     - name: Establecer esa versión como default
       become: yes
       become_user: vagrant
+      ignore_errors: yes
       shell: |
         source /home/vagrant/.sdkman/bin/sdkman-init.sh && sdk default java {{ java_version.stdout }}
       args:
         executable: /bin/bash       
 
-    # - name: Agregar clave GPG de vagrant
-    #   apt_key:
-    #     url: "{{ vagrant_key_url }}"
-    #     state: present
+    - name: Agregar clave GPG de vagrant
+      apt_key:
+        url: "{{ vagrant_key_url }}"
+        state: present
 
-    # - name: Agregar repositorio de vagrant
-    #   apt_repository:
-    #     repo: "deb {{ vagrant_repo_url }} binary/"
-    #     state: present
+    - name: Agregar repositorio de vagrant
+      apt_repository:
+        repo: "deb {{ vagrant_repo_url }} binary/"
+        state: present
 
-    # - name: Instalar vagrant
-    #   apt:
-    #     name: vagrant
-    #     state: present
-    #     update_cache: yes
+    - name: Instalar vagrant
+      apt:
+        name: vagrant
+        state: present
+        update_cache: yes
 
-    # - name: Asegurar que vagrant esté habilitado y corriendo
-    #   systemd:
-    #     name: vagrant
-    #     state: started
-    #     enabled: yes
+    - name: Asegurar que vagrant esté habilitado y corriendo
+      systemd:
+        name: vagrant
+        state: started
+        enabled: yes
