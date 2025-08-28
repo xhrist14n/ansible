@@ -41,25 +41,22 @@
       args:
         executable: /bin/bash
 
-    - name: Seleccionar versión por defecto
+    - name: Obtener la versión de Java instalada
       become: yes
       become_user: vagrant
       shell: |
-        source /home/vagrant/.sdkman/bin/sdkman-init.sh && sdk default java
+        source /home/vagrant/.sdkman/bin/sdkman-init.sh && sdk current java | awk '{print $NF}'
       args:
         executable: /bin/bash
+      register: java_version
 
-    - name: Descargar clave GPG de vagrant
-      ansible.builtin.get_url:
-        url: "https://pkg.vagrant.io/debian-stable/vagrant.io-2023.key"
-        dest: "/usr/share/keyrings/vagrant-key.gpg"
-        mode: '0644'
-
-    - name: Agregar repositorio de vagrant con signed-by
-      ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/usr/share/keyrings/vagrant-key.gpg] https://pkg.vagrant.io/debian-stable binary/"
-        state: present
-        filename: vagrant        
+    - name: Establecer esa versión como default
+      become: yes
+      become_user: vagrant
+      shell: |
+        source /home/vagrant/.sdkman/bin/sdkman-init.sh && sdk default java {{ java_version.stdout }}
+      args:
+        executable: /bin/bash       
 
     # - name: Agregar clave GPG de vagrant
     #   apt_key:
