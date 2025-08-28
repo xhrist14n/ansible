@@ -4,7 +4,9 @@
   hosts: all
   become: yes
 
+  
   vars:
+    sdkman_dir: "/usr/local/sdkman"
     jenkins_repo_url: "https://pkg.jenkins.io/debian-stable"
     jenkins_key_url: "https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key"
 
@@ -16,10 +18,45 @@
     - name: Instalar dependencias
       apt:
         name:
-          - openjdk-11-jdk
-          - gnupg
+          - zip
+          - unzip
           - curl
         state: present
+        update_cache: yes
+
+    - name: Crear directorio para SDKMAN
+      file:
+        path: "{{ sdkman_dir }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Descargar instalador de SDKMAN
+      become_user: "{{ ansible_user }}"
+      shell: |
+        curl -s "https://get.sdkman.io" | bash
+      args:
+        creates: "{{ sdkman_dir }}/bin/sdkman-init.sh"
+
+    - name: Cargar SDKMAN en bashrc
+      lineinfile:
+        path: "/home/{{ ansible_user }}/.bashrc"
+        line: 'export SDKMAN_DIR="{{ sdkman_dir }}" && source $SDKMAN_DIR/bin/sdkman-init.sh'
+        insertafter: EOF
+
+    - name: Instalar última versión de Java con SDKMAN
+      become_user: "{{ ansible_user }}"
+      shell: |
+        source {{ sdkman_dir }}/bin/sdkman-init.sh && sdk install java
+      args:
+        executable: /bin/bash
+
+    - name: Seleccionar versión por defecto
+      become_user: "{{ ansible_user }}"
+      shell: |
+        source {{ sdkman_dir }}/bin/sdkman-init.sh && sdk default java
+      args:
+        executable: /bin/bash
 
     - name: Descargar clave GPG de Jenkins
       ansible.builtin.get_url:
