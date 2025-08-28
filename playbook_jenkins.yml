@@ -68,7 +68,7 @@
       ansible.builtin.apt_repository:
         repo: "deb [signed-by=/usr/share/keyrings/jenkins-key.gpg] https://pkg.jenkins.io/debian-stable binary/"
         state: present
-        filename: jenkins
+        filename: jenkins        
 
     # - name: Agregar clave GPG de Jenkins
     #   apt_key:
